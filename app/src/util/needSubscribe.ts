@@ -17,8 +17,8 @@ export const needSubscribe = (tip = window.siyuan.languages._kernel[29]) => {
 };
 
 /**
- * 判断是否可以使用第三方同步
+ * 判断是否可以使用第三方同步，自建版本恒视为已付费，解锁 S3/WebDAV/本地目录同步设置
  */
 export const isPaidUser = () => {
-    return window.siyuan.user && (0 === window.siyuan.user.userSiYuanSubscriptionStatus || 1 === window.siyuan.user.userSiYuanOneTimePayStatus);
+    return true;
 };

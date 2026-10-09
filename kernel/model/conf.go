@@ -1360,16 +1360,10 @@ func IsSubscriber() bool {
 	return nil != u && (-1 == u.UserSiYuanProExpireTime || 0 < u.UserSiYuanProExpireTime) && 0 == u.UserSiYuanSubscriptionStatus
 }
 
+// IsPaidUser 自建版本恒返回已付费，解锁 S3/WebDAV/本地目录第三方同步与按需资源下载；
+// 依赖思源云端服务器的功能（官方同步、云端图床、云端提醒、收集箱）仍需真实订阅，由 IsSubscriber 继续把关
 func IsPaidUser() bool {
-	if IsSubscriber() {
-		return true
-	}
-
-	u := Conf.GetUser()
-	if nil == u {
-		return false
-	}
-	return 1 == u.UserSiYuanOneTimePayStatus
+	return true
 }
 
 const (

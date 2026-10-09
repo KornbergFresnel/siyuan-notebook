@@ -399,7 +399,8 @@ func checkSync(boot, exit, byHand bool) bool {
 		}
 		return false
 	}
-	if nil == Conf.GetUser() {
+	// 自建版本：第三方同步（S3/WebDAV/本地目录）不依赖思源账号，仅官方云端同步需要登录后的访问令牌
+	if conf.ProviderSiYuan == Conf.Sync.Provider && nil == Conf.GetUser() {
 		return false
 	}
 
