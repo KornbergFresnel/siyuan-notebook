@@ -46,6 +46,7 @@ export const PROVIDER_PRESETS: IProviderPreset[] = [
     },
     {id: "volcengine", name: "Volcengine Ark", baseURL: "https://ark.cn-beijing.volces.com/api/v3", category: "official", responsesSupport: "experimental", icon: "/stage/images/ai-providers/volcengine.svg"},
     {id: "zhipu", name: "Zhipu AI", baseURL: "https://open.bigmodel.cn/api/paas/v4", category: "official", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/zhipu.svg"},
+    {id: "zhipu-coding", name: "Zhipu AI (GLM Coding Plan)", baseURL: "https://open.bigmodel.cn/api/coding/paas/v4", category: "official", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/zhipu.svg"},
     {id: "gemini", name: "Gemini", baseURL: "https://generativelanguage.googleapis.com/v1beta/openai", category: "official", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/gemini.svg"},
     {id: "mistral", name: "Mistral AI", baseURL: "https://api.mistral.ai/v1", category: "official", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/mistral.svg"},
     {id: "siliconflow", name: "SiliconFlow", baseURL: "https://api.siliconflow.cn/v1", category: "aggregator", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/siliconflow.svg"},

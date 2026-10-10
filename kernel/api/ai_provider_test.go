@@ -9,8 +9,15 @@
 package api
 
 import (
-	"github.com/siyuan-note/siyuan/kernel/apicontract"
+	"errors"
+	"net/http"
+	"strings"
 	"testing"
+
+	"github.com/sashabaranov/go-openai"
+	"github.com/siyuan-note/siyuan/kernel/apicontract"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
 func TestResolveAIProviderDraft(t *testing.T) {
@@ -45,5 +52,25 @@ func TestResolveAIProviderDraft(t *testing.T) {
 func TestResolveAIProviderDraftRequiresBaseURL(t *testing.T) {
 	if _, err := resolveAIProvider(apicontract.AIProviderRequest{ProviderConfig: &apicontract.SettingProvider{}}); err == nil {
 		t.Fatal("empty draft provider should be rejected")
+	}
+}
+
+func TestAITestModelFailureMessageHintsCodingPlanEndpoint(t *testing.T) {
+	previousConf, previousLangs := model.Conf, util.Langs
+	t.Cleanup(func() { model.Conf, util.Langs = previousConf, previousLangs })
+	model.Conf = &model.AppConf{}
+	util.Langs = map[string]map[int]string{"en": {410: "set the API address to the coding endpoint"}}
+	billing := &openai.APIError{Message: "余额不足或无可用资源包,请充值", HTTPStatusCode: http.StatusTooManyRequests}
+
+	// 按量端点用编码套餐 Key 时补充地址提示，其余情况原样返回服务端错误
+	message := aiTestModelFailureMessage("https://open.bigmodel.cn/api/paas/v4", billing)
+	if !strings.Contains(message, billing.Error()) || !strings.Contains(message, "set the API address to the coding endpoint") {
+		t.Fatalf("coding plan hint was not appended: %q", message)
+	}
+	if message = aiTestModelFailureMessage("https://open.bigmodel.cn/api/coding/paas/v4", billing); message != billing.Error() {
+		t.Fatalf("coding endpoint should keep the server error: %q", message)
+	}
+	if message = aiTestModelFailureMessage("https://open.bigmodel.cn/api/paas/v4", errors.New("connection refused")); message != "connection refused" {
+		t.Fatalf("unrelated error changed: %q", message)
 	}
 }

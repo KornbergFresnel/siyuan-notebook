@@ -246,11 +246,25 @@ func testModelContract(c *gin.Context, req apicontract.AIModelRequest) apicontra
 	result := apicontract.AIModelTestData{Available: available, Matched: matched}
 	if nil != err {
 		// 生成请求失败时如实回传服务端错误，避免与「模型不在可用清单」的提示混淆
-		message := err.Error()
+		message := aiTestModelFailureMessage(provider.BaseURL, err)
 		result.Msg = &message
 		logging.LogErrorf("test model [%s] failed: %s", req.Model, err)
 	}
 	return apicontract.Success(result)
+}
+
+// aiTestModelFailureMessage 组装模型测试失败信息。
+// 智谱按量端点会用余额不足拒绝 GLM Coding Plan 订阅 Key，此时补充可操作的地址提示，
+// 避免用户按「请充值」去重复付费。
+func aiTestModelFailureMessage(baseURL string, err error) string {
+	message := err.Error()
+	if !util.IsZhipuCodingPlanBillingError(baseURL, err) {
+		return message
+	}
+	if hint := model.Conf.Language(410); "" != hint {
+		message += " " + hint
+	}
+	return message
 }
 
 // testEmbeddingModel 测试嵌入模型可用性。直接读取已保存的 Embedding 配置，

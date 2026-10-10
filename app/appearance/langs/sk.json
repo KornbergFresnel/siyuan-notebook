@@ -3002,6 +3002,7 @@
 		"406": "Archivácia zlyhala. Pôvodné údaje zostali zachované; skontrolujte voľné miesto, oprávnenia a sťahovanie zdrojov",
 		"407": "Pred vypnutím šifrovania archivujte všetky údaje na obnovu šifrovaných poznámkových blokov",
 		"408": "Preklad názvu DNS zlyhal. Skontrolujte nastavenia siete, DNS alebo proxy",
-		"409": "Sieťové pripojenie bolo prerušené alebo sa ho nepodarilo nadviazať. Skontrolujte nastavenia siete, proxy alebo brány firewall"
+		"409": "Sieťové pripojenie bolo prerušené alebo sa ho nepodarilo nadviazať. Skontrolujte nastavenia siete, proxy alebo brány firewall",
+		"410": "Ak používate predplatné GLM Coding Plan, nastavte adresu API na https://open.bigmodel.cn/api/coding/paas/v4"
 	}
 }

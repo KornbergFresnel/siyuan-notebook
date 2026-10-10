@@ -3002,6 +3002,7 @@
 		"406": "Error al archivar. Se han conservado los datos originales; compruebe el espacio libre, los permisos y las descargas de recursos",
 		"407": "Archive todos los datos de recuperación de cuadernos cifrados antes de desactivar el cifrado",
 		"408": "La resolución DNS ha fallado. Compruebe la configuración de red, DNS o proxy",
-		"409": "La conexión de red se ha interrumpido o no se ha podido establecer. Compruebe la configuración de red, proxy o cortafuegos"
+		"409": "La conexión de red se ha interrumpido o no se ha podido establecer. Compruebe la configuración de red, proxy o cortafuegos",
+		"410": "Si usas una suscripción GLM Coding Plan, establece la dirección de la API en https://open.bigmodel.cn/api/coding/paas/v4"
 	}
 }

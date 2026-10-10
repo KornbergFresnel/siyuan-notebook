@@ -3002,6 +3002,7 @@
 		"406": "The archive operation failed. Original data has been preserved; check available space, permissions, and resource downloads",
 		"407": "Archive all encrypted notebook recovery dependencies before disabling encryption",
 		"408": "DNS resolution failed, please check your network, DNS, or proxy settings",
-		"409": "The network connection was interrupted or could not be established, please check your network, proxy, or firewall settings"
+		"409": "The network connection was interrupted or could not be established, please check your network, proxy, or firewall settings",
+		"410": "If you use a GLM Coding Plan subscription, set the API address to https://open.bigmodel.cn/api/coding/paas/v4"
 	}
 }

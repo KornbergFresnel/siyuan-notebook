@@ -3002,6 +3002,7 @@
 		"406": "Archivering mislukt. De oorspronkelijke gegevens zijn bewaard; controleer vrije ruimte, machtigingen en het downloaden van bronnen",
 		"407": "Archiveer alle herstelgegevens van versleutelde notitieboeken voordat u versleuteling uitschakelt",
 		"408": "DNS-resolutie mislukt. Controleer uw netwerk-, DNS- of proxyinstellingen",
-		"409": "De netwerkverbinding is onderbroken of kon niet tot stand worden gebracht. Controleer uw netwerk-, proxy- of firewallinstellingen"
+		"409": "De netwerkverbinding is onderbroken of kon niet tot stand worden gebracht. Controleer uw netwerk-, proxy- of firewallinstellingen",
+		"410": "Als je een GLM Coding Plan-abonnement gebruikt, stel dan het API-adres in op https://open.bigmodel.cn/api/coding/paas/v4"
 	}
 }

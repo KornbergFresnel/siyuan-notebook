@@ -36,6 +36,14 @@ describe("AI provider presets", () => {
         assert.equal(getResponsesSupport("https://example.com/v1"), "experimental");
     });
 
+    it("keeps both Zhipu billing endpoints resolvable", () => {
+        // 编码套餐 Key 只能在编码端点调用，两个地址必须互不匹配
+        assert.equal(findProviderPreset("https://open.bigmodel.cn/api/paas/v4/")?.id, "zhipu");
+        assert.equal(findProviderPreset("https://open.bigmodel.cn/api/coding/paas/v4/")?.id, "zhipu-coding");
+        assert.equal(getDefaultProviderProtocol("zhipu-coding"), "openai");
+        assert.equal(getResponsesSupport("https://open.bigmodel.cn/api/coding/paas/v4"), "unsupported");
+    });
+
     it("switches DeepSeek standard endpoints with the selected protocol", () => {
         for (const baseURL of [
             "https://api.deepseek.com", "https://api.deepseek.com/v1/",

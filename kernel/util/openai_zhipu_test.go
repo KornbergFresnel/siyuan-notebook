@@ -19,10 +19,13 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/sashabaranov/go-openai"
 )
 
 func TestIsZhipuEndpoint(t *testing.T) {
@@ -254,6 +257,32 @@ func TestZhipuProbeParams(t *testing.T) {
 			t.Errorf("zhipuProbeParams(%q, %q, %q) = (%d, %q), want (%d, %q)",
 				tc.protocol, tc.baseURL, tc.model, tokens, reasoning, tc.wantTokens, tc.wantReasoning)
 		}
+	}
+}
+
+func TestIsZhipuCodingPlanBillingError(t *testing.T) {
+	billing := &openai.APIError{Message: "余额不足或无可用资源包,请充值", HTTPStatusCode: http.StatusTooManyRequests}
+	if !IsZhipuCodingPlanBillingError("https://open.bigmodel.cn/api/paas/v4", billing) {
+		t.Error("pay-as-you-go endpoint should report the coding plan rejection")
+	}
+	// 编码套餐端点已是正确地址，不再提示
+	if IsZhipuCodingPlanBillingError("https://open.bigmodel.cn/api/coding/paas/v4", billing) {
+		t.Error("coding endpoint should not report the coding plan rejection")
+	}
+	// 非智谱端点、其它错误与其它状态码都不提示
+	if IsZhipuCodingPlanBillingError("https://api.openai.com/v1", billing) {
+		t.Error("non zhipu endpoint should not report the coding plan rejection")
+	}
+	if IsZhipuCodingPlanBillingError("https://open.bigmodel.cn/api/paas/v4", errors.New("connection refused")) {
+		t.Error("non API error should not report the coding plan rejection")
+	}
+	if IsZhipuCodingPlanBillingError("https://open.bigmodel.cn/api/paas/v4",
+		&openai.APIError{Message: "余额不足或无可用资源包,请充值", HTTPStatusCode: http.StatusForbidden}) {
+		t.Error("unexpected status code should not report the coding plan rejection")
+	}
+	if IsZhipuCodingPlanBillingError("https://open.bigmodel.cn/api/paas/v4",
+		&openai.APIError{Message: "model not found", HTTPStatusCode: http.StatusTooManyRequests}) {
+		t.Error("unrelated 429 should not report the coding plan rejection")
 	}
 }
 

@@ -19,6 +19,7 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -112,6 +113,35 @@ func zhipuProbeParams(protocol, apiBaseURL, model string) (maxCompletionTokens i
 		return 1, ""
 	}
 	return zhipuProbeMaxCompletionTokens, "low"
+}
+
+// IsZhipuCodingPlanBillingError 判断错误是否为智谱按量端点上的 GLM Coding Plan 订阅拒绝。
+// 编码套餐 Key 只能在编码端点 /api/coding/paas/v4 调用，在按量端点会被以 1113 余额不足拒绝，
+// 该提示语指向的解决办法见 https://docs.bigmodel.cn/cn/coding-plan/faq
+func IsZhipuCodingPlanBillingError(apiBaseURL string, err error) bool {
+	if nil == err || !isZhipuPayAsYouGoEndpoint(apiBaseURL) {
+		return false
+	}
+	var apiErr *openai.APIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+	message := apiErr.Message
+	if !strings.Contains(message, "1113") && !strings.Contains(message, "余额不足") && !strings.Contains(message, "资源包") {
+		return false
+	}
+	// 智谱以 429 表示余额或资源包不足，其他状态码不做提示
+	return 0 == apiErr.HTTPStatusCode || http.StatusTooManyRequests == apiErr.HTTPStatusCode
+}
+
+// isZhipuPayAsYouGoEndpoint 判断端点是否为智谱按量计费的对话端点，编码套餐端点为 /api/coding/paas/v4。
+func isZhipuPayAsYouGoEndpoint(apiBaseURL string) bool {
+	parsed, err := url.Parse(strings.TrimSpace(apiBaseURL))
+	if err != nil || !isZhipuEndpoint(apiBaseURL) {
+		return false
+	}
+	path := strings.TrimRight(parsed.Path, "/")
+	return strings.HasSuffix(path, "/paas/v4") && !strings.Contains(path, "/coding/")
 }
 
 func (t *zhipuChatCompatTransport) Do(req *http.Request) (*http.Response, error) {
