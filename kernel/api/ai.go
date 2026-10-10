@@ -221,6 +221,7 @@ func removeAIEditorActionContract(c *gin.Context, req apicontract.AIEditorAction
 
 // testModel 测试 AI 模型可用性。使用已保存的 Provider 或详情页草稿中的 baseURL/APIKey/超时，
 // 校验指定模型是否可用。先通过 ListModels 拉取可用模型清单，再按 Provider 协议发送极简生成请求。
+// 生成请求失败时只回传服务端错误，模型是否在可用清单中由前端结合 available 与 matched 判断。
 var testModel = contractHandler(apicontract.AITestModel, testModelContract)
 
 func testModelContract(c *gin.Context, req apicontract.AIModelRequest) apicontract.Response[apicontract.AIModelTestData] {
@@ -244,12 +245,10 @@ func testModelContract(c *gin.Context, req apicontract.AIModelRequest) apicontra
 	// 避免触发统一的错误消息提示导致按钮状态无法恢复
 	result := apicontract.AIModelTestData{Available: available, Matched: matched}
 	if nil != err {
+		// 生成请求失败时如实回传服务端错误，避免与「模型不在可用清单」的提示混淆
 		message := err.Error()
 		result.Msg = &message
 		logging.LogErrorf("test model [%s] failed: %s", req.Model, err)
-	} else if !matched {
-		message := "model not in available list"
-		result.Msg = &message
 	}
 	return apicontract.Success(result)
 }

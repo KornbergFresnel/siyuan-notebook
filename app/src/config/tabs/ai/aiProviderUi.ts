@@ -8,6 +8,7 @@ import {Menu} from "../../../plugin/Menu";
 import {upDownHint} from "../../../util/upDownHint";
 import {moveModelItem} from "./aiModelOrder";
 import {hasProviderHeaderAuth, parseProviderHeaders} from "./aiProviderHeaders";
+import {resolveProviderTestResult} from "./aiProviderTestResult";
 import {
     findProviderPreset,
     getDefaultProviderProtocol,
@@ -344,18 +345,18 @@ const openAvailableModelMenu = (modelInput: HTMLInputElement, models: string[]) 
 };
 
 const showTestResult = (data: AIModelTestData) => {
-    if (data.matched) {
+    const result = resolveProviderTestResult(data);
+    if (result.success) {
         showMessage(window.siyuan.languages.testConnectionSuccess, undefined, "info");
         return;
     }
-    const available = data.available;
-    if (Array.isArray(available) && available.length > 0) {
+    if (result.modelNotFound) {
         showMessage(window.siyuan.languages.testConnectionFailModelNotFound, undefined, "error");
         return;
     }
     showMessage(
-        data.msg
-            ? window.siyuan.languages.testConnectionFailMsg.replace("${msg}", escapeHTML(String(data.msg)))
+        result.message
+            ? window.siyuan.languages.testConnectionFailMsg.replace("${msg}", escapeHTML(result.message))
             : window.siyuan.languages.testConnectionFail,
         undefined,
         "error",

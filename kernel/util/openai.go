@@ -217,7 +217,8 @@ func (t *extraBodyTransport) Do(req *http.Request) (*http.Response, error) {
 }
 
 // NewAIClientWithModel 创建生成客户端，并按模型与端点启用协议适配。
-// 模型请求统一启用思考字段适配，命中清单的模型会注入额外参数，官方 Gemini 端点会保留工具调用签名。
+// 模型请求统一启用思考字段适配，命中清单的模型会注入额外参数，官方 Gemini 端点会保留工具调用签名，
+// 智谱端点会改写输出上限字段并为强制思考模型补齐思考参数。
 func NewAIClientWithModel(apiKey, apiBaseURL, model string, headers ...map[string]string) *AIClient {
 	extra := ExtraBodyForModel(model)
 	geminiThoughtSignatures := isGoogleGeminiOpenAICompatibleEndpoint(apiBaseURL, model)
@@ -229,6 +230,10 @@ func NewAIClientWithModel(apiKey, apiBaseURL, model string, headers ...map[strin
 	}
 	if geminiThoughtSignatures {
 		transport = WrapGeminiThoughtSignatureTransport(transport)
+	}
+	// 智谱端点不识别 max_completion_tokens，强制思考模型还要求显式开启思考，按端点改写请求体
+	if compatible := zhipuChatCompatTransportFor(apiBaseURL, model, transport); nil != compatible {
+		transport = compatible
 	}
 	transport = &reasoningResponseTransport{base: transport}
 	config.HTTPClient = transport
@@ -282,12 +287,16 @@ func TestModel(apiKey, apiBaseURL, protocol, model string, timeout int, headers 
 		logging.LogInfof("list models failed [%s], test with text completion: %s", apiBaseURL, listErr)
 	}
 
+	// 探活请求的输出上限与推理档位按端点、协议与模型选择：智谱强制思考模型需要预留推理预算
+	maxCompletionTokens, reasoningEffort := zhipuProbeParams(protocol, apiBaseURL, model)
 	messages := []openai.ChatCompletionMessage{{Role: "user", Content: "1"}}
 	request := openai.ChatCompletionRequest{
 		Model:               model,
 		Messages:            messages,
-		MaxCompletionTokens: 1,
+		MaxCompletionTokens: maxCompletionTokens,
 		Temperature:         1,
+		// 推理档位为空时因 omitempty 不发送，沿用服务端默认档位
+		ReasoningEffort: reasoningEffort,
 	}
 	if IsOpenAIResponsesProtocol(protocol) || IsAnthropicMessagesProtocol(protocol) {
 		request.Stream = true
