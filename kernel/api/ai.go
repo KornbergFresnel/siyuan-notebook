@@ -309,7 +309,7 @@ func aiTestModelFailureMessage(baseURL string, err error) string {
 	if !util.IsZhipuCodingPlanBillingError(baseURL, err) {
 		return message
 	}
-	if hint := model.Conf.Language(421); "" != hint {
+	if hint := model.Conf.Language(426); "" != hint {
 		message += " " + hint
 	}
 	return message
