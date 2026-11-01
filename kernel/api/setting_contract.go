@@ -1,3 +1,7 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 package api
 
 import (
@@ -387,6 +391,7 @@ func settingEditorPayload(value *conf.Editor) *apicontract.SettingEditor {
 	result.DatabaseAttrViewMode = value.DatabaseAttrViewMode
 	result.DatabaseAttrHideEmpty = value.DatabaseAttrHideEmpty
 	result.DatabaseAttrUseTabs = value.DatabaseAttrUseTabs
+	result.DatabaseAttrLayout = value.DatabaseAttrLayout
 	result.GenerateHistoryInterval = value.GenerateHistoryInterval
 	result.HistoryRetentionDays = value.HistoryRetentionDays
 	result.Emoji = value.Emoji
@@ -401,6 +406,7 @@ func settingEditorPayload(value *conf.Editor) *apicontract.SettingEditor {
 	result.KaTexMacros = value.KaTexMacros
 	result.ReadOnly = value.ReadOnly
 	result.EmbedBlockBreadcrumb = value.EmbedBlockBreadcrumb
+	result.EmbedBlockBreadcrumbParentPath = value.EmbedBlockBreadcrumbParentPath
 	result.ListLogicalOutdent = value.ListLogicalOutdent
 	result.ListItemDotNumberClickFocus = value.ListItemDotNumberClickFocus
 	result.FloatWindowMode = value.FloatWindowMode
@@ -430,6 +436,7 @@ func settingEditorPayload(value *conf.Editor) *apicontract.SettingEditor {
 	result.HeadingNumberFormat = value.HeadingNumberFormat
 	result.HeadingEmbedMode = value.HeadingEmbedMode
 	result.PasteURLAutoConvert = value.PasteURLAutoConvert
+	result.MathDelimiterCompatibility = value.MathDelimiterCompatibility
 	result.DragHTMLFileToIframe = value.DragHTMLFileToIframe
 	result.Markdown = settingMarkdownPayload(value.Markdown)
 	return result
@@ -515,6 +522,7 @@ func settingFileTreePayload(value *conf.FileTree) *apicontract.SettingFileTree {
 	result.AlwaysSelectOpenedFile = value.AlwaysSelectOpenedFile
 	result.OpenFilesUseCurrentTab = value.OpenFilesUseCurrentTab
 	result.CloseTabOnDoubleClick = value.CloseTabOnDoubleClick
+	result.CloseWindowOnLastTabClosed = value.CloseWindowOnLastTabClosed
 	result.DocIconClickMode = value.DocIconClickMode
 	result.ParentDocTitleClickMode = value.ParentDocTitleClickMode
 	boxDocEnabled := value.BoxDocEnabled
@@ -596,6 +604,7 @@ func settingAppearancePayload(value *conf.Appearance) *apicontract.SettingAppear
 		return nil
 	}
 	result := &apicontract.SettingAppearance{}
+	result.LockScreenWallpaper = value.LockScreenWallpaper
 	result.CompactMode = value.CompactMode
 	result.MenuMouseScroll = value.MenuMouseScroll
 	result.OutlineKeepCurrentExpand = value.OutlineKeepCurrentExpand

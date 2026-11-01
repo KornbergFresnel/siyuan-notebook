@@ -1,10 +1,6 @@
-// SiYuan - From thought to insight, with agents
+// SiYuan - https://github.com/siyuan-note/siyuan
 // Copyright (c) 2020-present, b3log.org
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 package api
 
@@ -59,7 +55,7 @@ func TestAITestModelFailureMessageHintsCodingPlanEndpoint(t *testing.T) {
 	previousConf, previousLangs := model.Conf, util.Langs
 	t.Cleanup(func() { model.Conf, util.Langs = previousConf, previousLangs })
 	model.Conf = &model.AppConf{}
-	util.Langs = map[string]map[int]string{"en": {426: "set the API address to the coding endpoint"}}
+	util.Langs = map[string]map[int]string{"en": {449: "set the API address to the coding endpoint"}}
 	billing := &openai.APIError{Message: "余额不足或无可用资源包,请充值", HTTPStatusCode: http.StatusTooManyRequests}
 
 	// 按量端点用编码套餐 Key 时补充地址提示，其余情况原样返回服务端错误
