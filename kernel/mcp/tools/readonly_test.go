@@ -18,7 +18,7 @@ package tools
 
 import "testing"
 
-// TestReadsOnlyClassifiesReadActions 覆盖只读判定：读取动作放行，写入动作一律拒绝。
+// TestReadsOnlyClassifiesReadActions 覆盖只读判定：未声明写入的读取动作放行，声明写入的动作一律拒绝。
 func TestReadsOnlyClassifiesReadActions(t *testing.T) {
 	tests := []struct {
 		tool      *Tool
@@ -53,7 +53,8 @@ func TestReadsOnlyClassifiesReadActions(t *testing.T) {
 		{NotebookTool, "list", true},
 		{NotebookTool, "create", false},
 		{NotebookTool, "remove", false},
-		{WebFetchTool, "", true},
+		// 直接抓取会按响应类型下载文件到工作区，声明了本地写入即拒绝
+		{WebFetchTool, "", false},
 		{WebSearchTool, "", true},
 		{AgentLogTool, "tail", true},
 		{WorkspaceTool, "list", true},
@@ -90,8 +91,9 @@ func TestReadsOnlyClassifiesReadActions(t *testing.T) {
 		{FileTool, "grep", true},
 		{FileTool, "write", false},
 		{FileTool, "delete", false},
+		// 所有方法都可能将二进制响应保存到工作区，声明了本地写入即拒绝
 		{HTTPRequestTool, "", false},
-		{HTTPRequestTool, "get", true},
+		{HTTPRequestTool, "get", false},
 		{HTTPRequestTool, "post", false},
 		{HTTPRequestTool, "delete", false},
 		{DailynoteTool, "create", false},

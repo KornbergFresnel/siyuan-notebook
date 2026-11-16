@@ -282,7 +282,7 @@ func aiTestModelFailureMessage(baseURL string, err error) string {
 	if !util.IsZhipuCodingPlanBillingError(baseURL, err) {
 		return message
 	}
-	if hint := model.Conf.Language(449); "" != hint {
+	if hint := model.Conf.Language(474); "" != hint {
 		message += " " + hint
 	}
 	return message
@@ -358,7 +358,7 @@ func listModelsContract(c *gin.Context, req apicontract.AIProviderRequest) apico
 
 	if util.IsClaudeCodeProtocol(provider.Protocol) {
 		// 本机命令行的可用模型由命令行自身管理，不提供服务端清单
-		message := model.Conf.Language(446)
+		message := model.Conf.Language(471)
 		return apicontract.Success(apicontract.AIModelsData{Models: []string{}, ContextLengths: map[string]int{}, Msg: &message})
 	}
 
