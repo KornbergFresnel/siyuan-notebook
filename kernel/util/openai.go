@@ -105,6 +105,7 @@ func ChatGPT(msg string, contextMsgs []string, c *AIClient, apiBaseURL, protocol
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 	ctx = ContextWithOpenAIResponsesBaseURL(ctx, apiBaseURL)
+	ctx = ContextWithOpenAIChatTemperature(ctx, req.Temperature)
 	resp, err := CreateOpenAICompletion(ctx, c, protocol, req, nil)
 	if err != nil {
 		PushErrMsg("Requesting failed, please check kernel log for more details", 3000)
@@ -161,16 +162,22 @@ func ExtraBodyForModel(model string) map[string]any {
 	return nil
 }
 
-// extraBodyTransport 包装一个 HTTPDoer，在 chat/completions 请求体中注入额外字段。
-// 利用 go-openai 在 client 层暴露的 HTTPDoer 扩展点（Chat 路径不支持 withExtraBody），
-// 对流式与非流式 chat 请求都生效；非 chat 请求原样透传。
+type openAIChatTemperatureKey struct{}
+
+// Chat 请求用上下文区分显式温度与未设置值，避免 SDK 的 omitempty 丢失零温度。
+func ContextWithOpenAIChatTemperature(ctx context.Context, temperature float32) context.Context {
+	return context.WithValue(ctx, openAIChatTemperatureKey{}, temperature)
+}
+
+// 通过 HTTPDoer 为流式和非流式 Chat 请求补充显式温度及模型额外参数。
 type extraBodyTransport struct {
 	base      openai.HTTPDoer
 	extraBody map[string]any
 }
 
 func (t *extraBodyTransport) Do(req *http.Request) (*http.Response, error) {
-	if len(t.extraBody) == 0 || req.Method != http.MethodPost || !strings.Contains(req.URL.Path, "chat/completions") {
+	temperature, explicitTemperature := req.Context().Value(openAIChatTemperatureKey{}).(float32)
+	if (!explicitTemperature && len(t.extraBody) == 0) || req.Method != http.MethodPost || !strings.Contains(req.URL.Path, "chat/completions") {
 		return t.base.Do(req)
 	}
 
@@ -183,13 +190,21 @@ func (t *extraBodyTransport) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	var payload map[string]any
-	if err = json.Unmarshal(body, &payload); err != nil {
+	decoder := json.NewDecoder(bytes.NewReader(body))
+	// 重写请求体时保留 seed 等整数的精度。
+	decoder.UseNumber()
+	if err = decoder.Decode(&payload); err != nil || payload == nil || !json.Valid(body) {
 		// 请求体解析失败，用原始 body 透传，绝不破坏请求。
 		req.Body = io.NopCloser(bytes.NewReader(body))
 		req.ContentLength = int64(len(body))
 		return t.base.Do(req)
 	}
 
+	if explicitTemperature {
+		if _, present := payload["temperature"]; !present {
+			payload["temperature"] = temperature
+		}
+	}
 	maps.Copy(payload, t.extraBody)
 
 	merged, err := json.Marshal(payload)
@@ -213,9 +228,7 @@ func NewAIClientWithModel(apiKey, apiBaseURL, model string, headers ...map[strin
 	config := openai.DefaultConfig(apiKey)
 	config.BaseURL = apiBaseURL
 	var transport openai.HTTPDoer = newAIProviderHTTPClient(apiBaseURL, headers...)
-	if len(extra) > 0 {
-		transport = &extraBodyTransport{base: transport, extraBody: extra}
-	}
+	transport = &extraBodyTransport{base: transport, extraBody: extra}
 	if geminiThoughtSignatures {
 		transport = WrapGeminiThoughtSignatureTransport(transport)
 	}
@@ -283,7 +296,7 @@ func TestModel(apiKey, apiBaseURL, protocol, model string, timeout int, headers 
 
 	// 探活请求的输出上限与推理档位按端点、协议与模型选择：智谱强制思考模型需要预留推理预算
 	maxCompletionTokens, reasoningEffort := zhipuProbeParams(protocol, apiBaseURL, model)
-	messages := []openai.ChatCompletionMessage{{Role: "user", Content: "1"}}
+	messages := []openai.ChatCompletionMessage{{Role: "user", Content: "Reply with 1"}}
 	request := openai.ChatCompletionRequest{
 		Model:               model,
 		Messages:            messages,
@@ -291,6 +304,12 @@ func TestModel(apiKey, apiBaseURL, protocol, model string, timeout int, headers 
 		Temperature:         1,
 		// 推理档位为空时因 omitempty 不发送，沿用服务端默认档位
 		ReasoningEffort: reasoningEffort,
+	}
+	if !IsOpenAIResponsesProtocol(protocol) && !IsAnthropicMessagesProtocol(protocol) && !IsGeminiInteractionsProtocol(protocol) {
+		// Chat Completions 的输出预算包含推理 token，连通性测试使用有限预算生成简短回复。
+		if 1024 > request.MaxCompletionTokens {
+			request.MaxCompletionTokens = 1024
+		}
 	}
 	if IsOpenAIResponsesProtocol(protocol) {
 		// Responses 的输出预算至少为 16，包含可能使用的推理 token。
